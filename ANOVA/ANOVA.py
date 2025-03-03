@@ -2,40 +2,43 @@
 # ANOVA (Analysis of Variance)
 ######################################################
 
-# İkiden fazla grup ortalamasını karşılaştırmak için kullanılır.
+# Used to compare the means of more than two groups.
 
 df = sns.load_dataset("tips")
 df.head()
 
 df.groupby("day")["total_bill"].mean()
 
-# 1. Hipotezleri kur
+##############################
+# 1. Form the Hypotheses
+##############################
 
-# HO: m1 = m2 = m3 = m4
-# Grup ortalamaları arasında fark yoktur.
+# H0: m1 = m2 = m3 = m4
+# There is no difference between the group means.
 
-# H1: .. fark vardır
+# H1: There is a difference.
 
-# 2. Varsayım kontrolü
+##############################
+# 2. Assumption Check
+##############################
 
-# Normallik varsayımı
-# Varyans homojenliği varsayımı
+# Normality assumption
+# Homogeneity of variance assumption
 
-# Varsayım sağlanıyorsa one way anova
-# Varsayım sağlanmıyorsa kruskal
+# If assumptions are met, use one-way ANOVA
+# If assumptions are not met, use Kruskal-Wallis test
 
-# H0: Normal dağılım varsayımı sağlanmaktadır.
+# H0: The normality assumption is satisfied.
 
-#Kategorik bir değişkenin sınıflarını iteratif bir nesneye çevirdik
-#Böyle bu listenin içinde  gezerek normallik testini (shapirowilk)
-#testini yapmış oluruz.
+# We converted the categories of a categorical variable into an iterative object
+# By iterating through this list, we can perform the normality test (Shapiro-Wilk test) for each group.
 
 for group in list(df["day"].unique()):
     pvalue = shapiro(df.loc[df["day"] == group, "total_bill"])[1]
     print(group, 'p-value: %.4f' % pvalue)
 
 
-# H0: Varyans homojenliği varsayımı sağlanmaktadır.
+# H0: The homogeneity of variance assumption is satisfied.
 
 test_stat, pvalue = levene(df.loc[df["day"] == "Sun", "total_bill"],
                            df.loc[df["day"] == "Sat", "total_bill"],
@@ -44,21 +47,23 @@ test_stat, pvalue = levene(df.loc[df["day"] == "Sun", "total_bill"],
 print('Test Stat = %.4f, p-value = %.4f' % (test_stat, pvalue))
 
 
-# 3. Hipotez testi ve p-value yorumu
+##############################
+# 3. Hypothesis Test and p-value Interpretation
+##############################
 
-# Hiç biri sağlamıyor.
+# None of the assumptions hold.
 df.groupby("day").agg({"total_bill": ["mean", "median"]})
 
 
-# HO: Grup ortalamaları arasında istatistiki olarak anlamlı bir fark yoktur
+# H0: There is no statistically significant difference between the group means.
 
-# parametrik anova testi:
+# Parametric ANOVA test:
 f_oneway(df.loc[df["day"] == "Thur", "total_bill"],
          df.loc[df["day"] == "Fri", "total_bill"],
          df.loc[df["day"] == "Sat", "total_bill"],
          df.loc[df["day"] == "Sun", "total_bill"])
 
-# Nonparametrik anova testi:
+# Non-parametric ANOVA test:
 kruskal(df.loc[df["day"] == "Thur", "total_bill"],
         df.loc[df["day"] == "Fri", "total_bill"],
         df.loc[df["day"] == "Sat", "total_bill"],
